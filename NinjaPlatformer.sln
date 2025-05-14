@@ -1,6 +1,6 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActionRPG", "ActionRPG.csproj", "{C9CBFFA0-0D8A-45A8-8C09-D38A7CAB3BD9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NinjaPlatformer", "NinjaPlatformer.csproj", "{C9CBFFA0-0D8A-45A8-8C09-D38A7CAB3BD9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
