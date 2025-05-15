@@ -39,6 +39,7 @@ public partial class Player : CharacterBody2D
 		_animationPlayerLower = GetNode<AnimationPlayer>("AnimationPlayerLower");
 		_animationPlayerLower.CurrentAnimationChanged += OnCurrentLowerAnimationChanged;
 		_animationPlayerUpper = GetNode<AnimationPlayer>("AnimationPlayerUpper");
+		_animationPlayerUpper.AnimationFinished += OnUpperAnimationFinished;
 		_rayCastLower = GetNode<RayCast2D>("Anchor/RayCastLower");
 		_rayCastUpper = GetNode<RayCast2D>("Anchor/RayCastUpper");
 		_hurtbox = GetNode<Hurtbox>("Anchor/Hurtbox");
@@ -210,7 +211,7 @@ public partial class Player : CharacterBody2D
 		_animationPlayerUpper.Play(animationName);
 	}
 
-	private void OnLowerAnimationFinished(string animationName)
+	private void OnUpperAnimationFinished(StringName animationName)
 	{
 		if (animationName == "attack")
 		{
