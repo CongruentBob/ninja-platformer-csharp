@@ -5,8 +5,9 @@ namespace NinjaPlatformer;
 
 public partial class Player : CharacterBody2D
 {
-	[Export]
-	public float MaxSpeed { get; set; } = 120;
+    [Export]
+
+    public float MaxSpeed { get; set; } = 120;
 	[Export]
 	public float Acceleration { get; set; } = 10000;
 	[Export]
@@ -21,17 +22,20 @@ public partial class Player : CharacterBody2D
 	public float DownGravity { get; set; } = 600;
 	[Export]
 	public float JumpAmount { get; set; } = 200;
-
+    [Export]
 	private CharacterState _state = CharacterState.MOVE;
 	private float _coyoteTime;
 	private Node2D _anchor;
 	private AnimationPlayer _animationPlayerLower;
 	private AnimationPlayer _animationPlayerUpper;
-	private RayCast2D _rayCastLower;
+    private AnimationPlayer _effectsAnimationPlayer;
+    private RayCast2D _rayCastLower;
 	private RayCast2D _rayCastUpper;
     private Hurtbox _hurtbox;
+    private Shaker _shaker;
 
-    public override void _Ready()
+
+	public override void _Ready()
 	{
 		base._Ready();
 
@@ -40,10 +44,18 @@ public partial class Player : CharacterBody2D
 		_animationPlayerLower.CurrentAnimationChanged += OnCurrentLowerAnimationChanged;
 		_animationPlayerUpper = GetNode<AnimationPlayer>("AnimationPlayerUpper");
 		_animationPlayerUpper.AnimationFinished += OnUpperAnimationFinished;
+		_effectsAnimationPlayer = GetNode<AnimationPlayer>("EffectsAnimationPlayer");
 		_rayCastLower = GetNode<RayCast2D>("Anchor/RayCastLower");
 		_rayCastUpper = GetNode<RayCast2D>("Anchor/RayCastUpper");
 		_hurtbox = GetNode<Hurtbox>("Anchor/Hurtbox");
 		_hurtbox.HurtboxEntered += OnHurtboxEntered;
+
+		var spriteAnchor = GetNode<Node2D>("Anchor/SpriteAnchor");
+		_shaker = new Shaker(spriteAnchor);
+
+		var spriteLower = GetNode<Sprite2D>("Anchor/SpriteAnchor/SpriteLower");
+		// breaking change?
+		//(spriteLower.Material as ShaderMaterial).SetShaderParameter("flash_color", "ff4d4d");
 	}
 
     public override void _PhysicsProcess(double delta)
@@ -153,6 +165,11 @@ public partial class Player : CharacterBody2D
 				MoveAndSlide();
 
 				break;
+			case CharacterState.HIT:
+				MoveAndSlide();
+				ApplyFriction(deltaF);
+				ApplyGravity(deltaF);
+				break;
 		}
 	}
 
@@ -165,7 +182,7 @@ public partial class Player : CharacterBody2D
 
 	private void ApplyFriction(float delta)
 	{
-		var frictionAmount = IsOnFloor() ? AirFriction : Friction;
+		var frictionAmount = IsOnFloor() ? Friction : AirFriction;
 
 		Velocity = Velocity.MoveToward(Velocity with { X = 0 }, frictionAmount * delta);
 	}
@@ -185,10 +202,10 @@ public partial class Player : CharacterBody2D
 		}
 	}
 
-	private void Jump()
+	private void Jump(float? amount = null)
 	{
 		// jump
-		Velocity = Velocity with { Y = -JumpAmount };
+		Velocity = Velocity with { Y = -(amount ?? JumpAmount) };
 	}
 
 	private bool ShouldWallClimb()
@@ -198,9 +215,15 @@ public partial class Player : CharacterBody2D
 			&& !IsOnFloor();
 	}
 
-    private void OnHurtboxEntered(Hitbox area)
-    {
-		Console.WriteLine("Damn!");
+	private void OnHurtboxEntered(Hitbox area)
+	{
+		var direction = Math.Sign(area.GlobalPosition.DirectionTo(GlobalPosition).X);
+		Velocity = Velocity with { X = (direction == 0 ? -1 : direction) * MaxSpeed };
+		Jump(JumpAmount / 2);
+		_state = CharacterState.HIT;
+		_shaker.Shake(3.0f, .3f);
+		_animationPlayerLower.Play("jump");
+		_effectsAnimationPlayer.Play("hitflash");
     }
 
 	private void OnCurrentLowerAnimationChanged(string animationName)
