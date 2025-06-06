@@ -5,6 +5,8 @@ namespace NinjaPlatformer;
 
 public partial class Player : CharacterBody2D
 {
+	[Export]
+	public Stats Stats { get; set; }
     [Export]
 
     public float MaxSpeed { get; set; } = 120;
@@ -25,7 +27,8 @@ public partial class Player : CharacterBody2D
     [Export]
 	private CharacterState _state = CharacterState.MOVE;
 	private float _coyoteTime;
-	private Node2D _anchor;
+    private Camera2D _camera2D;
+    private Node2D _anchor;
 	private AnimationPlayer _animationPlayerLower;
 	private AnimationPlayer _animationPlayerUpper;
     private AnimationPlayer _effectsAnimationPlayer;
@@ -39,6 +42,8 @@ public partial class Player : CharacterBody2D
 	{
 		base._Ready();
 
+		Stats.NoHealth += Die;
+		_camera2D = GetNode<Camera2D>("Camera2D");
 		_anchor = GetNode<Node2D>("Anchor");
 		_animationPlayerLower = GetNode<AnimationPlayer>("AnimationPlayerLower");
 		_animationPlayerLower.CurrentAnimationChanged += OnCurrentLowerAnimationChanged;
@@ -57,6 +62,13 @@ public partial class Player : CharacterBody2D
 		// breaking change?
 		//(spriteLower.Material as ShaderMaterial).SetShaderParameter("flash_color", "ff4d4d");
 	}
+
+	private void Die()
+	{
+		_camera2D.Reparent(GetTree().CurrentScene, keepGlobalTransform: true);
+		QueueFree();
+    }
+
 
     public override void _PhysicsProcess(double delta)
 	{
@@ -224,6 +236,7 @@ public partial class Player : CharacterBody2D
 		_shaker.Shake(3.0f, .3f);
 		_animationPlayerLower.Play("jump");
 		_effectsAnimationPlayer.Play("hitflash");
+		Stats.Health -= area.Damage;
     }
 
 	private void OnCurrentLowerAnimationChanged(string animationName)
@@ -247,6 +260,9 @@ public partial class Player : CharacterBody2D
 	protected override void Dispose(bool disposing)
 	{
 		_animationPlayerLower.CurrentAnimationChanged -= OnCurrentLowerAnimationChanged;
+		_animationPlayerUpper.AnimationFinished -= OnUpperAnimationFinished;
+		Stats.NoHealth -= Die;
+		_hurtbox.HurtboxEntered -= OnHurtboxEntered;
 
 		base.Dispose(disposing);
 	}

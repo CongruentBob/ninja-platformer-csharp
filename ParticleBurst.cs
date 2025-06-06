@@ -13,5 +13,6 @@ public partial class ParticleBurst : GpuParticles2D
 		Explosiveness = 1;
 		OneShot = true;
 		LocalCoords = true;
+		Restart();
 	}
 }

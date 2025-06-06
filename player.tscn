@@ -412,6 +412,9 @@ safe_margin = 0.2
 script = ExtResource("1_i3pqv")
 metadata/_edit_group_ = true
 
+[node name="Camera2D" type="Camera2D" parent="."]
+offset = Vector2(0, -16)
+
 [node name="Anchor" type="Node2D" parent="."]
 
 [node name="SpriteAnchor" type="Node2D" parent="Anchor"]
